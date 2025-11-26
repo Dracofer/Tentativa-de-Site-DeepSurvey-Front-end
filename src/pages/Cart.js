@@ -65,7 +65,12 @@ export default function Cart() {
           <img
             src={`/images/${item.product.imageUrl}`}
             alt=""
-            style={{ width: 120, height: 120, objectFit: "cover", borderRadius: 8 }}
+            style={{
+              width: 120,
+              height: 120,
+              objectFit: "cover",
+              borderRadius: 8,
+            }}
           />
 
           <div style={{ flex: 1 }}>
@@ -92,27 +97,49 @@ export default function Cart() {
               </button>
 
               <button
-  onClick={() => removeItem(item.id)}
-  style={{
-    background: "#ff4d4d",
-    color: "#fff",
-    border: "none",
-    padding: "6px 14px",
-    borderRadius: 8,
-    cursor: "pointer",
-    fontSize: 14,
-    fontWeight: 600,
-    transition: "0.2s",
-  }}
-  onMouseOver={(e) => (e.target.style.background = "#e04343")}
-  onMouseOut={(e) => (e.target.style.background = "#ff4d4d")}
->
-  Remover
-</button>
+                onClick={() => removeItem(item.id)}
+                style={{
+                  background: "#ff4d4d",
+                  color: "#fff",
+                  border: "none",
+                  padding: "6px 14px",
+                  borderRadius: 8,
+                  cursor: "pointer",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  transition: "0.2s",
+                }}
+                onMouseOver={(e) =>
+                  (e.target.style.background = "#e04343")
+                }
+                onMouseOut={(e) =>
+                  (e.target.style.background = "#ff4d4d")
+                }
+              >
+                Remover
+              </button>
             </div>
           </div>
         </div>
       ))}
+
+      {/* BOTÃO FINALIZAR PEDIDO */}
+      <button
+        onClick={() => (window.location.href = "/checkout")}
+        style={{
+          marginTop: 20,
+          padding: "12px 22px",
+          background: "#4CAF50",
+          color: "#fff",
+          border: "none",
+          borderRadius: 8,
+          fontSize: 16,
+          cursor: "pointer",
+          fontWeight: 600,
+        }}
+      >
+        Finalizar Pedido
+      </button>
     </div>
   );
 }

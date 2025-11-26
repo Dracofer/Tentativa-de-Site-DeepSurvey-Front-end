@@ -9,6 +9,12 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Login from "./pages/Login";
 import Admin from "./pages/Admin";
+import FaleConosco from "./pages/FaleConosco";
+import Categories from "./pages/Categories";
+import CategoryProducts from "./pages/CategoryProducts";
+import SearchResults from "./pages/SearchResults";
+import Offers from "./pages/Offers";
+import Produtos from "./pages/Produtos";
 
 export default function App() {
   return (
@@ -23,6 +29,12 @@ export default function App() {
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/login" element={<Login />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/faleconosco" element={<FaleConosco />} />
+<Route path="/ofertas" element={<Offers />} />
+<Route path="/categorias" element={<Categories />} />
+<Route path="/categoria/:id" element={<CategoryProducts />} />
+<Route path="/buscar" element={<SearchResults />} />
+<Route path="/produtos" element={<Produtos />} />
         </Routes>
       </main>
 
