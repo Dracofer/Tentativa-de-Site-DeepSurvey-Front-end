@@ -1,11 +1,31 @@
-LojaZap-like React (Modern) - Prototype
---------------------------------------
-This is a React skeleton (modern layout) that connects to your Spring Boot backend.
-- Backend assumed at http://localhost:8083
-How to run:
-  1. Install Node.js (16+ recommended).
-  2. npm install
-  3. npm start
-Notes:
-  - This is a front-end project skeleton. You must run your Spring Boot backend separately.
-  - If your backend uses a different port, set REACT_APP_API_URL in .env file.
+# 🛒 DeepSurvey Suplementos – Frontend  
+Aplicação front-end desenvolvida em **React**, utilizada pelos clientes para visualizar produtos, adicionar itens ao carrinho e finalizar pedidos via WhatsApp.  
+O projeto se conecta ao backend Java Spring Boot.
+
+---
+
+## 🚀 Tecnologias Utilizadas
+- React.js (CRA)
+- Axios
+- React Router
+- CSS Modules
+- LocalStorage (controle da sessão do carrinho)
+
+---
+
+## 📌 Funcionalidades
+- 📦 Exibição de categorias e produtos  
+- 🛍️ Carrinho de compras com persistência  
+- 🔍 Busca de produtos  
+- ⭐ Sistema de ofertas  
+- 💰 Cálculo automático de frete por cidade  
+- 🧾 Checkout completo com envio do pedido para WhatsApp  
+- 🔐 Login & Registro (via API do backend)  
+
+---
+
+## 🔧 Como rodar o projeto
+
+### 1. Instalar dependências
+```bash
+npm install
