@@ -150,6 +150,11 @@ X-Session-Id
 Base URL configurável
 
 Considerações Finais: Esse projeto teve continuidade porem por segurança da loja vou postar abertamento só até aqui.
+<img width="1920" height="1004" alt="image" src="https://github.com/user-attachments/assets/417b6d7a-05ad-4463-8222-992f5833b540" />
+<img width="1904" height="1002" alt="image" src="https://github.com/user-attachments/assets/1adbf8f7-5a9c-425f-8415-30d778024df8" />
+<img width="1906" height="1002" alt="image" src="https://github.com/user-attachments/assets/e1b3de68-2dfb-472f-85ff-fed502b99803" />
+Toda loja é editavel de forma simples sem necessidade de mexer em codigos.
+
 
 📄 Licença
 
