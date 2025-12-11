@@ -1,31 +1,156 @@
-# 🛒 DeepSurvey Suplementos – Frontend  
-Aplicação front-end desenvolvida em **React**, utilizada pelos clientes para visualizar produtos, adicionar itens ao carrinho e finalizar pedidos via WhatsApp.  
-O projeto se conecta ao backend Java Spring Boot.
+🛒 DeepSurvey Frontend — Loja Delivery (React.js)
 
----
+Este é o frontend da plataforma DeepSurvey Suplementos.
+O objetivo é ser rápido, simples e altamente personalizável via painel administrativo.
 
-## 🚀 Tecnologias Utilizadas
-- React.js (CRA)
-- Axios
-- React Router
-- CSS Modules
-- LocalStorage (controle da sessão do carrinho)
+🚀 Tecnologias Utilizadas
 
----
+React.js
 
-## 📌 Funcionalidades
-- 📦 Exibição de categorias e produtos  
-- 🛍️ Carrinho de compras com persistência  
-- 🔍 Busca de produtos  
-- ⭐ Sistema de ofertas  
-- 💰 Cálculo automático de frete por cidade  
-- 🧾 Checkout completo com envio do pedido para WhatsApp  
-- 🔐 Login & Registro (via API do backend)  
+React Router DOM
 
----
+Axios
 
-## 🔧 Como rodar o projeto
+Context API
 
-### 1. Instalar dependências
-```bash
+CSS puro com suporte a temas
+
+Fetch + ViaCEP API
+
+🎨 Funcionalidades
+🏬 Cliente (usuário comum)
+
+Página inicial com produtos por categoria
+
+Página de produto com galeria de imagens
+
+Busca
+
+Ofertas
+
+Categorias
+
+Sacola persistente (localStorage + sessionId)
+
+Checkout completo:
+
+Endereço
+
+CEP (Busca automática)
+
+Pagamento
+
+Troco
+
+Cálculo de entrega
+
+Geração automática da mensagem WhatsApp
+
+🔧 Painel Admin (somente ROLE_ADMIN)
+
+Gerenciamento de produtos
+
+CRUD de categorias
+
+CRUD de fretes e regiões
+
+Configurações da loja:
+
+Nome, subtítulo
+
+Logo
+
+Tema (claro, escuro, glass)
+
+Cores personalizadas
+
+Imagem de fundo
+
+WhatsApp
+
+E-mail
+
+Status da loja
+
+Pedido mínimo
+
+⚙️ Como Rodar o Projeto
+1️⃣ Instalar Dependências
 npm install
+
+2️⃣ Configurar variável da API (opcional)
+
+Crie .env:
+
+REACT_APP_API_URL=http://localhost:8083
+
+3️⃣ Rodar o servidor de desenvolvimento
+npm start
+
+
+App disponível em:
+
+http://localhost:3000
+
+🧩 Estrutura do Projeto
+src/
+│
+├── pages/                (Home, ProductDetails, Checkout, Admin, etc.)
+├── components/           (Navbar, Footer, ProductCard...)
+├── context/              (StoreConfigContext)
+├── hooks/                (useAuth)
+├── api.js                (Axios configurado com token + sessionId)
+└── App.js                (rotas do app)
+
+🔐 Autenticação
+
+O login retorna um JWT contendo:
+
+{
+  "sub": "usuario",
+  "roles": ["ROLE_ADMIN"]
+}
+
+
+O frontend armazena o token no localStorage.
+
+Admin é automaticamente detectado por:
+
+roles.includes("ROLE_ADMIN")
+
+🎨 Personalização de Tema
+
+Através do StoreConfigContext e variáveis CSS:
+
+--title-color
+--product-text-color
+--page-text-color
+--bg-image
+--theme-color
+
+
+O painel admin altera tudo dinamicamente.
+
+📦 Build de Produção
+npm run build
+
+🔗 Comunicação com o Backend
+
+Configurada em:
+
+src/api.js
+
+
+Inclui:
+
+Token automático
+
+X-Session-Id
+
+Base URL configurável
+
+Considerações Finais: Esse projeto teve continuidade porem por segurança da loja vou postar abertamento só até aqui.
+
+📄 Licença
+
+MIT License.
