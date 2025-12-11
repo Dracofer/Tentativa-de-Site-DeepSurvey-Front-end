@@ -105,6 +105,7 @@ export default function Navbar() {
               <>
                 <Link to="/painel">Painel</Link>
                 <Link to="/painel-loja">Config. Loja</Link>
+<Link to="/painel-fretes">Fretes</Link>
               </>
             )}
 

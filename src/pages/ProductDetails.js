@@ -8,7 +8,7 @@ export default function ProductDetails() {
   const nav = useNavigate();
 
   const [currentImage, setCurrentImage] = useState(null);
-  const [zoomImage, setZoomImage] = useState(null); // <-- zoom modal
+  const [zoomImage, setZoomImage] = useState(null);
 
   useEffect(() => {
     load();
@@ -17,12 +17,13 @@ export default function ProductDetails() {
   async function load() {
     try {
       const r = await api.get("/products/" + id);
-      setP(r.data);
+      const product = r.data;
 
-      // Define a imagem principal
-      const mainImg = r.data.imageUrl?.startsWith("http")
-        ? r.data.imageUrl
-        : `/images/${r.data.imageUrl}`;
+      setP(product);
+
+      const mainImg = product.imageUrl?.startsWith("http")
+        ? product.imageUrl
+        : `/images/${product.imageUrl}`;
 
       setCurrentImage(mainImg);
     } catch (e) {
@@ -53,7 +54,6 @@ export default function ProductDetails() {
 
   if (!p) return <div className="container">Carregando...</div>;
 
-  // Todas as imagens do produto
   const mainImg = p.imageUrl?.startsWith("http")
     ? p.imageUrl
     : `/images/${p.imageUrl}`;
@@ -66,6 +66,8 @@ export default function ProductDetails() {
 
   const gallery = [mainImg, ...extraImages];
 
+  const isOnSale = p.salePrice && p.salePrice < p.price;
+
   return (
     <div
       className="container"
@@ -76,12 +78,14 @@ export default function ProductDetails() {
         paddingTop: 40,
       }}
     >
-      {/* CARROSSEL DE IMAGENS */}
+      {/* ================================
+          CARROSSEL DE IMAGENS
+      ================================= */}
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {/* IMAGEM PRINCIPAL */}
         <img
           src={currentImage}
-          onClick={() => setZoomImage(currentImage)} // <-- abre zoom
+          onClick={() => setZoomImage(currentImage)}
           alt={p.name}
           style={{
             width: 420,
@@ -89,8 +93,8 @@ export default function ProductDetails() {
             objectFit: "contain",
             borderRadius: 10,
             cursor: "zoom-in",
+            background: "#fff",
             transition: "0.2s",
-            background: "#fff"
           }}
         />
 
@@ -100,7 +104,7 @@ export default function ProductDetails() {
             <img
               key={i}
               src={img}
-              onClick={() => setCurrentImage(img)} // <-- troca imagem principal
+              onClick={() => setCurrentImage(img)}
               alt=""
               style={{
                 width: 80,
@@ -113,33 +117,83 @@ export default function ProductDetails() {
                     : "1px solid #ccc",
                 cursor: "pointer",
                 background: "#fff",
-                padding: 3
+                padding: 3,
               }}
             />
           ))}
         </div>
       </div>
 
-      {/* DETALHES DO PRODUTO */}
+      {/* ================================
+          DETALHES DO PRODUTO
+      ================================= */}
       <div style={{ flex: 1 }}>
+        {/* 🔥 BADGE DE OFERTA */}
+        {isOnSale && (
+          <div
+            style={{
+              display: "inline-block",
+              background: "#ff3b3b",
+              color: "#fff",
+              padding: "6px 12px",
+              borderRadius: 8,
+              fontWeight: 700,
+              marginBottom: 10,
+              fontSize: 15,
+            }}
+          >
+            🔥 Oferta Especial
+          </div>
+        )}
+
         <h2 style={{ fontSize: 28, fontWeight: 700 }}>{p.name}</h2>
 
-        <div
-          style={{
-            color: "#0a7cff",
-            fontWeight: 800,
-            fontSize: 28,
-            marginTop: 10,
-            marginBottom: 20,
-          }}
-        >
-          R$ {p.price?.toFixed(2).replace(".", ",")}
-        </div>
+        {/* ================================
+            PREÇO DO PRODUTO
+        ================================= */}
+        {isOnSale ? (
+          <div style={{ marginTop: 10, marginBottom: 20 }}>
+            <div
+              style={{
+                color: "#0a7cff",
+                fontWeight: 800,
+                fontSize: 30,
+              }}
+            >
+              R$ {p.salePrice.toFixed(2).replace(".", ",")}
+            </div>
 
-        <p style={{ fontSize: 16, color: "#555", lineHeight: "22px" }}>
+            <div
+              style={{
+                textDecoration: "line-through",
+                color: "#bbb",
+                fontSize: 18,
+                marginTop: 4,
+              }}
+            >
+              R$ {p.price.toFixed(2).replace(".", ",")}
+            </div>
+          </div>
+        ) : (
+          <div
+            style={{
+              color: "#0a7cff",
+              fontWeight: 800,
+              fontSize: 30,
+              marginTop: 10,
+              marginBottom: 20,
+            }}
+          >
+            R$ {p.price.toFixed(2).replace(".", ",")}
+          </div>
+        )}
+
+        {/* DESCRIÇÃO */}
+        <p style={{ fontSize: 16, color: "#ccc", lineHeight: "22px" }}>
           {p.description}
         </p>
 
+        {/* BOTÃO */}
         <button
           onClick={add}
           className="btn"
@@ -156,13 +210,16 @@ export default function ProductDetails() {
         </button>
       </div>
 
-      {/* MODAL DE ZOOM */}
+      {/* ================================
+          MODAL DE ZOOM
+      ================================= */}
       {zoomImage && (
         <div
           onClick={() => setZoomImage(null)}
           style={{
             position: "fixed",
-            top: 0, left: 0,
+            top: 0,
+            left: 0,
             width: "100vw",
             height: "100vh",
             background: "rgba(0,0,0,0.8)",
@@ -170,7 +227,7 @@ export default function ProductDetails() {
             justifyContent: "center",
             alignItems: "center",
             cursor: "zoom-out",
-            zIndex: 9999
+            zIndex: 9999,
           }}
         >
           <img
@@ -179,7 +236,7 @@ export default function ProductDetails() {
             style={{
               maxWidth: "90%",
               maxHeight: "90%",
-              borderRadius: 10
+              borderRadius: 10,
             }}
           />
         </div>

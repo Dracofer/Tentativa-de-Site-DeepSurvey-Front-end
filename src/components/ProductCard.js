@@ -49,7 +49,7 @@ export default function ProductCard({ p }) {
       <div className="price" style={{ margin: "10px 0" }}>
         {p.onSale ? (
           <>
-            <span style={{ color: "red", fontWeight: "bold", fontSize: 18 }}>
+            <span className="price-promo">
               R$ {p.salePrice.toFixed(2).replace(".", ",")}
             </span>
 

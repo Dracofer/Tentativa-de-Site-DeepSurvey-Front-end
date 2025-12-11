@@ -46,20 +46,7 @@ export default function Cart() {
       <h3>Minha sacola</h3>
 
       {items.map((item) => (
-        <div
-          key={item.id}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 20,
-            marginBottom: 25,
-            background: "#fff",
-            borderRadius: 10,
-            padding: 15,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-            maxWidth: 650,
-          }}
-        >
+        <div key={item.id} className="themed-box" style={{ display: "flex", gap: 20 }}>
           <img
             src={
               item.product.imageUrl?.startsWith("http")
@@ -94,16 +81,13 @@ export default function Cart() {
 
               <button
                 onClick={() => removeItem(item.id)}
+                className="btn"
                 style={{
                   background: "#ff4d4d",
                   color: "#fff",
-                  border: "none",
                   padding: "6px 14px",
                   borderRadius: 8,
-                  cursor: "pointer",
-                  fontSize: 14,
                   fontWeight: 600,
-                  transition: "0.2s",
                 }}
               >
                 Remover
@@ -120,11 +104,10 @@ export default function Cart() {
           padding: "12px 22px",
           background: "#4CAF50",
           color: "#fff",
-          border: "none",
           borderRadius: 8,
           fontSize: 16,
-          cursor: "pointer",
           fontWeight: 600,
+          cursor: "pointer",
         }}
       >
         Finalizar Pedido

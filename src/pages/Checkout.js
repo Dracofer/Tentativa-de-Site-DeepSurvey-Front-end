@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import api from "../api";
 import "./Checkout.css";
+import { useStoreConfig } from "../context/StoreConfigContext";
 
 export default function Checkout() {
   const [items, setItems] = useState([]);
@@ -8,12 +9,10 @@ export default function Checkout() {
   const [delivery, setDelivery] = useState(0);
   const [total, setTotal] = useState(0);
 
-  const cidades = {
-    "Jandira-SP": 10,
-    "Barueri-SP": 20,
-    "Itapevi-SP": 20,
-    "Cotia-SP": 20,
-  };
+  const [regions, setRegions] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const { cfg } = useStoreConfig();
 
   const [form, setForm] = useState({
     name: "",
@@ -31,10 +30,12 @@ export default function Checkout() {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    load();
+    loadCart();
+    loadRegions();
   }, []);
 
-  async function load() {
+  // Carrega carrinho
+  async function loadCart() {
     const sessionId = localStorage.getItem("sessionId");
     if (!sessionId) return;
 
@@ -43,27 +44,62 @@ export default function Checkout() {
       const data = r.data || [];
       setItems(data);
 
-      const st = data.reduce(
-        (acc, i) => acc + (i.price || 0) * (i.quantity || 0),
-        0
-      );
+      // 👉 SUBTOTAL considerando preço promocional
+      const st = data.reduce((acc, i) => {
+        const unitPrice =
+          i.product.salePrice && i.product.salePrice < i.product.price
+            ? i.product.salePrice
+            : i.product.price;
+
+        return acc + unitPrice * (i.quantity || 0);
+      }, 0);
 
       setSubtotal(st);
-      setTotal(st);
+      setTotal(st + delivery);
     } catch (err) {
       console.error("Erro ao carregar carrinho", err);
     }
   }
 
-  function calcDelivery(cidade) {
-    const valor = cidades[cidade] || 0;
+  // Carrega cidades / fretes
+  async function loadRegions() {
+    try {
+      const r = await api.get("/delivery-regions");
+      setRegions(r.data.filter((rg) => rg.active));
+    } catch (err) {
+      console.error("Erro ao carregar regiões de entrega", err);
+    }
+  }
+
+  // Calcula frete
+  function calcDelivery(cityName) {
+    const region = regions.find((r) => r.name === cityName);
+    const valor = region ? region.fee : 0;
+
     setDelivery(valor);
     setTotal(subtotal + valor);
   }
 
-  // -----------------------------------------
-  // 🔴 VALIDAÇÃO DO FORMULÁRIO
-  // -----------------------------------------
+  // Busca CEP
+  async function buscarCEP() {
+    const cepNum = form.cep.replace(/\D/g, "");
+    if (cepNum.length !== 8) return;
+
+    try {
+      const r = await fetch(`https://viacep.com.br/ws/${cepNum}/json/`);
+      const data = await r.json();
+      if (!data.erro) {
+        setForm((prev) => ({
+          ...prev,
+          street: data.logradouro || prev.street,
+        }));
+      }
+    } catch (err) {
+      console.error("Erro ao buscar CEP:", err);
+    }
+  }
+
+  // Validação
   function validateForm() {
     const newErrors = {};
 
@@ -78,27 +114,69 @@ export default function Checkout() {
       newErrors.cep = "CEP inválido.";
 
     if (!form.street.trim()) newErrors.street = "Informe a rua.";
-
     if (!form.number.trim()) newErrors.number = "Informe o número.";
 
     setErrors(newErrors);
-
     return Object.keys(newErrors).length === 0;
   }
 
-  // -----------------------------------------
-  // 🔵 ENVIO DO PEDIDO
-  // -----------------------------------------
+  function fmt(v) {
+    return Number(v || 0).toFixed(2).replace(".", ",");
+  }
+
+  // Envio do pedido
   async function submitOrder() {
+    if (loading) return;
+
+    if (cfg && cfg.storeOpen === false) {
+      alert("A loja está fechada no momento.");
+      return;
+    }
+
+    if (!regions || regions.length === 0) {
+      alert("Nenhuma região de entrega configurada.");
+      return;
+    }
+
+    if (!items || items.length === 0) {
+      alert("Seu carrinho está vazio.");
+      return;
+    }
+
     if (!validateForm()) {
       alert("Preencha todos os campos obrigatórios.");
+      return;
+    }
+
+    if (!form.city) {
+      alert("Selecione sua cidade.");
       return;
     }
 
     const sessionId = localStorage.getItem("sessionId");
 
     let changeValue = form.change || null;
-    if (changeValue !== null) changeValue = Number(changeValue);
+    if (changeValue !== null && changeValue !== "") {
+      changeValue = Number(
+        String(changeValue).replace(",", ".").replace(" ", "")
+      );
+
+      if (isNaN(changeValue)) {
+        alert("Valor de troco inválido.");
+        return;
+      }
+
+      if (changeValue < total) {
+        alert(
+          `O valor para troco (R$ ${fmt(
+            changeValue
+          )}) é menor que o total (R$ ${fmt(total)}).`
+        );
+        return;
+      }
+    } else {
+      changeValue = null;
+    }
 
     const req = {
       sessionId,
@@ -115,69 +193,64 @@ export default function Checkout() {
     };
 
     try {
+      setLoading(true);
+
       const r = await api.post("/orders/checkout", req);
       const order = r.data;
 
       localStorage.removeItem("sessionId");
 
+      // Mensagem WhatsApp
       let msg =
-  `DEEPSURVEY SUPLEMENTOS\n` +
-  `------------------------------\n\n` +
-  `Pedido #${order.id}\n\n` +
-  `Itens:\n`;
+        `DEEPSURVEY SUPLEMENTOS\n------------------------------\n\n` +
+        `Pedido #${order.id}\n\nItens:\n`;
 
-order.items.forEach((i) => {
-  msg += `${i.quantity}x ${i.product.name} - R$ ${Number(i.price)
-    .toFixed(2)
-    .replace(".", ",")}\n`;
-});
+      order.items.forEach((i) => {
+        msg += `${i.quantity}x ${i.product.name} - R$ ${fmt(i.price)}\n`;
+      });
 
-msg += `\nSubtotal: R$ ${subtotal.toFixed(2).replace(".", ",")}\n`;
-msg += `Entrega: R$ ${delivery.toFixed(2).replace(".", ",")}\n`;
-msg += `Total: R$ ${total.toFixed(2).replace(".", ",")}\n\n`;
+      msg += `\nSubtotal: R$ ${fmt(subtotal)}\n`;
+      msg += `Entrega: R$ ${fmt(delivery)}\n`;
+      msg += `Total: R$ ${fmt(total)}\n\n`;
 
-msg += `Endereço:\n`;
-msg += `${form.street} ${form.number}`;
-if (form.complement) msg += ` - ${form.complement}`;
-msg += `, ${form.city}`;
-msg += `, CEP: ${form.cep}`;
-if (form.reference) msg += ` (Ref: ${form.reference})`;
-msg += `\n\n`;
+      msg += `Endereço:\n${form.street} ${form.number}`;
+      if (form.complement) msg += ` - ${form.complement}`;
+      msg += `, ${form.city}, CEP: ${form.cep}`;
+      if (form.reference) msg += ` (Ref: ${form.reference})`;
+      msg += `\n\nPagamento: ${form.paymentMethod}\n`;
+      if (form.change) msg += `Troco para R$ ${fmt(form.change)}\n\n`;
 
-msg += `Pagamento: ${form.paymentMethod}\n`;
-if (form.change)
-  msg += `Troco para R$ ${form.change}\n\n`;
-else
-  msg += `\n`;
+      msg += `www.deepsurveysuplementos.com.br`;
 
-msg += `www.deepsurveysuplementos.com.br`;
+      try {
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(msg);
+        }
+      } catch {}
 
       const encoded = encodeURIComponent(msg);
+      const whatsappNumber = cfg?.whatsappNumber || "5511947935371";
 
       window.location.href =
-        `https://api.whatsapp.com/send?phone=5511947935371&text=${encoded}`;
+        `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${encoded}`;
     } catch (err) {
       console.error("Erro no checkout:", err);
       alert("Erro ao enviar pedido.");
+    } finally {
+      setLoading(false);
     }
   }
 
-  function fmt(v) {
-    return Number(v || 0).toFixed(2).replace(".", ",");
-  }
-
-  // -----------------------------------------
-  // 🔶 EXIBIÇÃO DO FORMULÁRIO
-  // -----------------------------------------
+  // JSX
   return (
     <div className="container" style={{ maxWidth: 1100, paddingTop: 30 }}>
       <h2>Pedido Delivery</h2>
 
       <div style={{ display: "flex", gap: 40, alignItems: "flex-start" }}>
+        {/* FORMULÁRIO */}
         <div style={{ flex: 1 }}>
           <div className="section-title">🧍 Dados do cliente</div>
 
-          {/* Nome */}
           <input
             className={`form-input ${errors.name ? "error" : ""}`}
             placeholder="Nome completo"
@@ -191,16 +264,12 @@ msg += `www.deepsurveysuplementos.com.br`;
           />
           {errors.name && <div className="input-error">{errors.name}</div>}
 
-          {/* Whatsapp */}
           <input
             className={`form-input ${errors.phone ? "error" : ""}`}
             placeholder="Whatsapp"
             value={form.phone}
             onChange={(e) =>
-              setForm({
-                ...form,
-                phone: e.target.value.replace(/\D/g, ""),
-              })
+              setForm({ ...form, phone: e.target.value.replace(/\D/g, "") })
             }
           />
           {errors.phone && <div className="input-error">{errors.phone}</div>}
@@ -209,7 +278,6 @@ msg += `www.deepsurveysuplementos.com.br`;
             📦 Entrega
           </div>
 
-          {/* Cidade */}
           <label>Cidade:</label>
           <select
             className={`form-input ${errors.city ? "error" : ""}`}
@@ -220,29 +288,25 @@ msg += `www.deepsurveysuplementos.com.br`;
             }}
           >
             <option value="">Selecione...</option>
-            {Object.keys(cidades).map((c) => (
-              <option key={c} value={c}>
-                {c}
+            {regions.map((r) => (
+              <option key={r.id} value={r.name}>
+                {r.name}
               </option>
             ))}
           </select>
           {errors.city && <div className="input-error">{errors.city}</div>}
 
-          {/* CEP */}
           <input
             className={`form-input ${errors.cep ? "error" : ""}`}
             placeholder="CEP"
             value={form.cep}
             onChange={(e) =>
-              setForm({
-                ...form,
-                cep: e.target.value.replace(/[^0-9-]/g, ""),
-              })
+              setForm({ ...form, cep: e.target.value.replace(/[^0-9-]/g, "") })
             }
+            onBlur={buscarCEP}
           />
           {errors.cep && <div className="input-error">{errors.cep}</div>}
 
-          {/* Rua */}
           <input
             className={`form-input ${errors.street ? "error" : ""}`}
             placeholder="Rua"
@@ -259,7 +323,6 @@ msg += `www.deepsurveysuplementos.com.br`;
           />
           {errors.street && <div className="input-error">{errors.street}</div>}
 
-          {/* Número */}
           <input
             className={`form-input ${errors.number ? "error" : ""}`}
             placeholder="Número"
@@ -273,7 +336,6 @@ msg += `www.deepsurveysuplementos.com.br`;
           />
           {errors.number && <div className="input-error">{errors.number}</div>}
 
-          {/* Complemento */}
           <input
             className="form-input"
             placeholder="Complemento"
@@ -281,7 +343,6 @@ msg += `www.deepsurveysuplementos.com.br`;
             onChange={(e) => setForm({ ...form, complement: e.target.value })}
           />
 
-          {/* Referência */}
           <input
             className="form-input"
             placeholder="Ponto de referência"
@@ -301,7 +362,6 @@ msg += `www.deepsurveysuplementos.com.br`;
             💳 Pagamento
           </div>
 
-          {/* Método de pagamento */}
           <select
             className="form-input"
             value={form.paymentMethod}
@@ -315,7 +375,6 @@ msg += `www.deepsurveysuplementos.com.br`;
             <option>Pix</option>
           </select>
 
-          {/* Troco */}
           <input
             className="form-input"
             placeholder="Troco (opcional)"
@@ -328,14 +387,19 @@ msg += `www.deepsurveysuplementos.com.br`;
             }
           />
 
-          <button className="btn-confirm" onClick={submitOrder}>
-            Enviar pedido via WhatsApp
+          <button
+            className="btn-confirm"
+            onClick={submitOrder}
+            disabled={loading}
+          >
+            {loading ? "Enviando..." : "Enviar pedido via WhatsApp"}
           </button>
         </div>
 
-        {/* RESUMO */}
+        {/* RESUMO DO PEDIDO */}
         <div style={{ width: 320 }}>
           <div
+            className="checkout-summary"
             style={{
               background: "#fff8d5",
               padding: 18,
@@ -344,8 +408,12 @@ msg += `www.deepsurveysuplementos.com.br`;
               border: "1px solid rgba(0,0,0,0.06)",
             }}
           >
-            <div style={{ textAlign: "center", fontWeight: 700 }}>
-              DEEPSURVEY SUPLEMENTOS
+            {/* LOJA */}
+            <div className="store-name" style={{ textAlign: "center", fontWeight: 700 }}>
+              {cfg?.storeName || "Minha Loja"}
+              <div className="subtitle" style={{ fontWeight: 400, fontSize: 13 }}>
+                {cfg?.storeSubtitle}
+              </div>
             </div>
 
             <div
@@ -364,50 +432,101 @@ msg += `www.deepsurveysuplementos.com.br`;
               />
             </div>
 
-            <div style={{ textAlign: "center", fontWeight: 700, marginBottom: 6 }}>
+            <div
+              style={{
+                textAlign: "center",
+                fontWeight: 700,
+                marginBottom: 6,
+              }}
+            >
               Pedido
             </div>
 
             <div style={{ height: 8 }} />
 
-            <div style={{ borderTop: "1px dashed rgba(0,0,0,0.12)", paddingTop: 10 }}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: 8,
-                }}
-              >
-                <div style={{ color: "#333" }}>Subtotal:</div>
-                <div style={{ fontWeight: 700 }}>R$ {fmt(subtotal)}</div>
-              </div>
+            {/* SUBTOTAL / ENTREGA / TOTAL */}
+            <div
+  style={{
+    borderTop: "1px dashed rgba(0,0,0,0.12)",
+    paddingTop: 10,
+  }}
+>
 
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <div style={{ color: "#333" }}>Entrega:</div>
-                <div style={{ fontWeight: 700 }}>
-                  {delivery > 0 ? `R$ ${fmt(delivery)}` : "—"}
-                </div>
-              </div>
+  {/* SUBTOTAL */}
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "space-between",
+      marginBottom: 8,
+    }}
+  >
+    <div style={{ color: "#333" }}>Subtotal:</div>
+    <div style={{ fontWeight: 700 }}>R$ {fmt(subtotal)}</div>
+  </div>
 
-              <div
-                style={{
-                  borderTop: "1px solid rgba(0,0,0,0.06)",
-                  marginTop: 10,
-                  paddingTop: 10,
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <div style={{ fontWeight: 800 }}>Total:</div>
-                  <div style={{ fontWeight: 800 }}>R$ {fmt(total)}</div>
-                </div>
-              </div>
-            </div>
+  {/* DESCONTO — calculado automaticamente */}
+  {(() => {
+    const totalDiscount = items.reduce((acc, i) => {
+      if (i.product.salePrice && i.product.salePrice < i.product.price) {
+        const d = (i.product.price - i.product.salePrice) * i.quantity;
+        return acc + d;
+      }
+      return acc;
+    }, 0);
 
+    if (totalDiscount <= 0) return null;
+
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          marginBottom: 8,
+          color: "#b30000",
+          fontWeight: 700,
+        }}
+      >
+        <div>Desconto:</div>
+        <div>- R$ {fmt(totalDiscount)}</div>
+      </div>
+    );
+  })()}
+
+  {/* ENTREGA */}
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "space-between",
+    }}
+  >
+    <div style={{ color: "#333" }}>Entrega:</div>
+    <div style={{ fontWeight: 700 }}>
+      {delivery > 0 ? `R$ ${fmt(delivery)}` : "—"}
+    </div>
+  </div>
+
+  {/* TOTAL FINAL */}
+  <div
+    style={{
+      borderTop: "1px solid rgba(0,0,0,0.06)",
+      marginTop: 10,
+      paddingTop: 10,
+    }}
+  >
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        fontWeight: 800,
+      }}
+    >
+      <div>Total:</div>
+      <div>R$ {fmt(total)}</div>
+    </div>
+  </div>
+</div>
+
+            {/* PAGAMENTO */}
             <div
               style={{
                 marginTop: 14,

@@ -1,75 +1,367 @@
-/* LojaZap-like theme - improved for sections */
-
-/* Reset & base */
-*{box-sizing:border-box}
-body{margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;background:#f4f6f8;color:#222}
-a{color:inherit;text-decoration:none}
-
-/* Top thin bar */
-.topbar{
-  background:#2b2b3a;
-  color:#fff;
-  padding:8px 12px;
-  font-size:14px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
+/* ===================================================================
+   RESET & BASE
+=================================================================== */
+* {
+  box-sizing: border-box;
 }
 
-/* header with logo and search */
-.header{background:#fff;border-bottom:1px solid #eee;padding:18px 0}
-.header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:20px;padding:0 16px}
-.logo{display:flex;align-items:center;gap:12px}
-.logo img{width:60px;height:60px;border-radius:50%}
-.logo h1{margin:0;font-size:20px;color:#111;line-height:1}
-.logo small{display:block;color:#666;font-size:12px}
+html {
+  background-image: var(--bg-image);
+  background-size: cover;
+  background-repeat: repeat;
+  background-attachment: fixed;
+  background-color: #f4f6f8;
+}
 
-/* search */
-.searchbox{flex:1;display:flex;justify-content:center}
-.searchbox input{width:60%;padding:12px 14px;border-radius:8px;border:1px solid #e6e6e6}
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  background: transparent !important;
+  color: #222;
+}
 
-/* nav below header */
-.navbar{max-width:1200px;margin:0 auto;padding:12px 16px;display:flex;gap:18px;align-items:center}
-.navbar a{padding:8px 10px;border-radius:6px;color:#444}
-.navbar a.active{background:#f0f2f4}
+/* ===================================================================
+   VARIÁVEIS DE CORES CUSTOMIZÁVEIS
+=================================================================== */
+:root {
+  --title-color: #ffffff;
+  --product-text-color: #dddddd;
+  --page-text-color: #cccccc;
+}
 
-/* main container */
-.container{max-width:1200px;margin:18px auto;padding:0 16px}
+/* Títulos globais */
+h1, h2, h3, h4, .section-title h2 {
+  color: var(--title-color) !important;
+}
 
-/* section title */
-.section-title{display:flex;align-items:center;justify-content:space-between;margin:8px 0 18px}
-.section-title h2{margin:0;font-size:20px}
+/* Textos dos produtos */
+.card h3,
+.card .old-price {
+  color: var(--product-text-color) !important;
+}
 
-/* products grid */
-.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}
-.card{background:#fff;border-radius:10px;padding:12px;border:1px solid #eee;display:flex;flex-direction:column;align-items:center;transition:transform .18s,box-shadow .18s}
-.card:hover{transform:translateY(-6px);box-shadow:0 12px 30px rgba(16,24,40,0.06)}
-.card .img{width:100%;height:180px;border-radius:8px;object-fit:cover;background:#f3f4f6}
-.card h3{font-size:14px;margin:10px 0 6px;text-align:center;height:44px;overflow:hidden}
-.badge{position:absolute;background:#e53935;color:#fff;padding:6px 8px;border-radius:6px;font-size:12px;margin:8px}
+.card .price:not(.price-promo) {
+  color: var(--product-text-color) !important;
+}
 
-/* price */
-.price-row{width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px}
-.old-price{font-size:12px;color:#999;text-decoration:line-through}
-.price{color:#1b1b2a;font-weight:800;font-size:18px}
+/* Textos páginas internas */
+.container,
+.container p,
+.container span,
+.container li {
+  color: var(--page-text-color) !important;
+}
 
-/* card CTA */
-.card .btn{background:#111827;color:#fff;padding:10px 12px;border-radius:8px;border:none;cursor:pointer;width:100%;margin-top:10px}
-.card .btn:hover{opacity:0.95}
+/* Preço promocional */
+.price-promo {
+  color: var(--promo-price-color, red) !important;
+}
 
-/* section "view all" small link */
-.view-all{color:#0a7cff;font-weight:600;font-size:14px}
+/* ===================================================================
+   TEMA DO TOPO – SOMENTE HEADER
+=================================================================== */
+body.header-light .header {
+  background: #ffffff !important;
+  color: #000 !important;
+}
 
-/* footer dark */
-.footer{background:#1f2430;color:#ddd;padding:28px 16px;margin-top:40px;text-align:center}
+body.header-dark .header {
+  background: #111827 !important;
+  color: #fff !important;
+}
 
-/* layout for section + horizontal scroll on small */
-.section-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-.section-carousel{display:flex;gap:12px;overflow:auto;padding-bottom:6px}
+body.header-blue .header {
+  background: #2c2b6e !important;
+  color: #fff !important;
+}
 
-/* responsive */
-@media(max-width:900px){
-  .searchbox input{width:100%}
-  .products-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
-  .card .img{height:140px}
+body.header-glass .header {
+  background: rgba(255,255,255,0.08) !important;
+  backdrop-filter: blur(10px);
+  color: #fff !important;
+}
+
+/* ===================================================================
+   NAVEGAÇÃO SECUNDÁRIA
+=================================================================== */
+.topbar {
+  background: #2b2b3a;
+  color: #fff;
+  padding: 8px 12px;
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 12px 16px;
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(4px);
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+.navbar a {
+  padding: 8px 10px;
+  border-radius: 6px;
+  color: #fff !important;
+}
+
+.navbar a.active {
+  background: rgba(255,255,255,0.15);
+}
+
+/* ===================================================================
+   THEMED-BOX – CONTROLE UNIVERSAL DO TEMA
+   (Categorias, Ofertas, Fale Conosco, Sacola, Fretes)
+=================================================================== */
+.themed-box {
+  padding: 20px;
+  border-radius: 14px;
+  transition: 0.25s ease;
+}
+
+/* Tema Claro */
+body.theme-light .themed-box {
+  background: #ffffff;
+  color: #111;
+  border: 1px solid #e6e6e6;
+}
+
+/* Tema Escuro */
+body.theme-dark .themed-box {
+  background: #1c1c22;
+  color: #eee;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Tema Glass */
+body.theme-glass .themed-box {
+  background: rgba(255,255,255,0.10);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: #fff;
+}
+
+/* ===================================================================
+   TEMAS PARA OS CARDS DE PRODUTOS
+=================================================================== */
+
+body.theme-light .card {
+  background: #ffffff;
+  color: #111;
+  border: 1px solid #eee;
+}
+
+body.theme-dark .card {
+  background: #1c1c22;
+  color: #eee;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+body.theme-glass .card {
+  background: rgba(255,255,255,0.10);
+  backdrop-filter: blur(10px);
+  color: #eee;
+  border: 1px solid rgba(255,255,255,0.12);
+}
+/* ========================================
+   FIXA AS CORES DA NOTA DO CHECKOUT
+======================================== */
+.checkout-summary * {
+  color: #333 !important;
+}
+
+.checkout-summary .store-name {
+  color: #000 !important;
+}
+
+.checkout-summary .subtitle {
+  color: #555 !important;
+}
+
+.checkout-summary .total {
+  color: #000 !important;
+  font-weight: 800;
+}
+/* ===================================================================
+   COMPONENTES ORIGINAIS
+=================================================================== */
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.header {
+  background: #fff;
+  border-bottom: 1px solid #eee;
+  padding: 18px 0;
+}
+
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 16px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+}
+
+.logo h1 {
+  margin: 0;
+  font-size: 20px;
+  color: #111;
+  line-height: 1;
+}
+
+.logo small {
+  display: block;
+  color: #666;
+  font-size: 12px;
+}
+
+.searchbox {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.searchbox input {
+  width: 60%;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #e6e6e6;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 18px auto;
+  padding: 0 16px;
+}
+
+.section-title {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0 18px;
+}
+
+.section-title h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 12px;
+  border: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: 0.18s;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(16,24,40,0.06);
+}
+
+.card .img {
+  width: 100%;
+  height: 180px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #f3f4f6;
+}
+
+.card h3 {
+  font-size: 14px;
+  margin: 10px 0 6px;
+  text-align: center;
+  height: 44px;
+  overflow: hidden;
+}
+
+.badge {
+  position: absolute;
+  background: #e53935;
+  color: #fff;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  margin: 8px;
+}
+
+.price-row {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.old-price {
+  font-size: 12px;
+  color: #999;
+  text-decoration: line-through;
+}
+
+.price {
+  color: #1b1b2a;
+  font-weight: 800;
+  font-size: 18px;
+}
+
+.card .btn {
+  background: #111827;
+  color: #fff;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.footer {
+  background: #1f2430;
+  color: #ddd;
+  padding: 28px 16px;
+  margin-top: 40px;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .searchbox input {
+    width: 100%;
+  }
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+  .card .img {
+    height: 140px;
+  }
 }

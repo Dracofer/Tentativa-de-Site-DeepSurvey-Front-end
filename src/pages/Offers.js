@@ -14,12 +14,11 @@ export default function Offers() {
         console.error("Erro ao carregar ofertas", err);
       }
     }
-
     load();
   }, []);
 
   return (
-    <div className="container" style={{ paddingTop: 30 }}>
+    <div className="container" style={{ paddingTop: 40 }}>
       <h2>🔥 Ofertas</h2>
 
       {items.length === 0 && (
@@ -31,41 +30,40 @@ export default function Offers() {
           <Link
             key={p.id}
             to={`/produto/${p.id}`}
+            className="themed-box"
             style={{
               width: 220,
               padding: 12,
+              borderRadius: 12,
               textDecoration: "none",
-              color: "#000",
-              background: "#fff",
-              borderRadius: 10,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+              transition: "0.3s",
             }}
           >
             <img
-  src={
-    p.imageUrl.startsWith("http")
-      ? p.imageUrl
-      : `/images/${p.imageUrl}`
-  }
-  alt={p.name}
-  style={{
-    width: "100%",
-    height: 180,
-    objectFit: "cover",
-    borderRadius: 8,
-    marginBottom: 10,
-  }}
-/>
+              src={
+                p.imageUrl.startsWith("http")
+                  ? p.imageUrl
+                  : `/images/${p.imageUrl}`
+              }
+              alt={p.name}
+              style={{
+                width: "100%",
+                height: 180,
+                objectFit: "cover",
+                borderRadius: 8,
+                marginBottom: 10,
+              }}
+            />
 
             <h4 style={{ margin: "6px 0", fontSize: 18 }}>{p.name}</h4>
 
             {/* Preço de oferta */}
-            <p style={{ fontWeight: "bold", color: "#d9534f" }}>
+            <p style={{ fontWeight: "bold" }}>
               R$ {p.salePrice.toFixed(2).replace(".", ",")}
             </p>
 
-            {/* Preço normal riscado */}
-            <p style={{ textDecoration: "line-through", color: "#888" }}>
+            {/* Preço normal */}
+            <p style={{ textDecoration: "line-through", opacity: 0.7 }}>
               R$ {p.price.toFixed(2).replace(".", ",")}
             </p>
           </Link>

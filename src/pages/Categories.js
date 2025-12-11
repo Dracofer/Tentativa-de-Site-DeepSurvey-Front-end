@@ -10,18 +10,18 @@ export default function Categories() {
   }, []);
 
   return (
-    <div className="container" style={{ paddingTop: 30, maxWidth: 700 }}>
+    <div className="container" style={{ paddingTop: 40 }}>
       <h2>Categorias</h2>
 
       {cats.map((c) => (
         <div
           key={c.id}
+          className="themed-box"
           style={{
             padding: 15,
             margin: "10px 0",
-            background: "#fff",
-            borderRadius: 8,
-            boxShadow: "0 2px 6px rgba(0,0,0,0.08)"
+            borderRadius: 10,
+            cursor: "pointer",
           }}
         >
           <Link

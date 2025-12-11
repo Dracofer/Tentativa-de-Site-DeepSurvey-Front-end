@@ -46,6 +46,7 @@ export default function ProdutoForm({ categorias, produtoEdit, onSave }) {
     }
 
     alert("Produto salvo!");
+
     setForm({
       name: "",
       price: "",
@@ -62,32 +63,13 @@ export default function ProdutoForm({ categorias, produtoEdit, onSave }) {
     <div style={{ marginBottom: 20 }}>
       <h3>{produtoEdit ? "Editar Produto" : "Novo Produto"}</h3>
 
-      <input
-        placeholder="Nome"
-        name="name"
-        value={form.name}
-        onChange={update}
-      /><br />
+      <input placeholder="Nome" name="name" value={form.name} onChange={update} /><br />
 
-      <input
-        placeholder="Preço"
-        name="price"
-        value={form.price}
-        onChange={update}
-      /><br />
+      <input placeholder="Preço" name="price" value={form.price} onChange={update} /><br />
 
-      <input
-        placeholder="Imagem URL"
-        name="imageUrl"
-        value={form.imageUrl}
-        onChange={update}
-      /><br />
+      <input placeholder="Imagem URL" name="imageUrl" value={form.imageUrl} onChange={update} /><br />
 
-      <select
-        name="category"
-        value={form.category || ""}
-        onChange={update}
-      >
+      <select name="category" value={form.category || ""} onChange={update}>
         <option value="">Sem categoria</option>
         {categorias.map(c => (
           <option key={c.id} value={c.id}>{c.name}</option>

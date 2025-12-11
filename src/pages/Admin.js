@@ -7,6 +7,9 @@ export default function Admin() {
 
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
+  const [salePrice, setSalePrice] = useState("");
+  const [onSale, setOnSale] = useState(false);
+
   const [description, setDescription] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [extraImages, setExtraImages] = useState("");
@@ -14,7 +17,6 @@ export default function Admin() {
   const [categoryId, setCategoryId] = useState("");
 
   const [newCategory, setNewCategory] = useState("");
-
   const [editingProduct, setEditingProduct] = useState(null);
 
   useEffect(() => {
@@ -37,18 +39,23 @@ export default function Admin() {
       await api.post("/products", {
         name,
         price: parseFloat(price),
+        salePrice: onSale ? parseFloat(salePrice) : null,
+        onSale,
         description,
         imageUrl,
         stock: parseInt(stock || "0"),
         category: categoryId ? { id: categoryId } : null,
         images: extraImages
           .split(",")
-          .map(s => s.trim())
-          .filter(Boolean)
+          .map((s) => s.trim())
+          .filter(Boolean),
       });
 
+      // Limpando os campos
       setName("");
       setPrice("");
+      setSalePrice("");
+      setOnSale(false);
       setDescription("");
       setImageUrl("");
       setExtraImages("");
@@ -72,10 +79,14 @@ export default function Admin() {
     try {
       const updated = {
         ...editingProduct,
+        price: parseFloat(editingProduct.price),
+        salePrice: editingProduct.onSale
+          ? parseFloat(editingProduct.salePrice)
+          : null,
         images: editingProduct.images
           .split(",")
-          .map(s => s.trim())
-          .filter(Boolean)
+          .map((s) => s.trim())
+          .filter(Boolean),
       };
 
       await api.put("/products/" + editingProduct.id, updated);
@@ -89,7 +100,6 @@ export default function Admin() {
 
   async function addCategory() {
     if (!newCategory) return;
-
     await api.post("/categories", { name: newCategory });
     setNewCategory("");
     loadCategories();
@@ -102,134 +112,294 @@ export default function Admin() {
   }
 
   return (
-    <div className="container">
-      <h2>Painel Admin</h2>
+    <div className="container" style={{ maxWidth: 1000, paddingTop: 30 }}>
+      {/* ================================
+           CAIXA PRINCIPAL (THEMED-BOX)
+      ================================= */}
+      <div className="themed-box">
+        <h2>Painel Admin</h2>
 
-      {/* NOVO PRODUTO */}
-      <h3>Novo Produto</h3>
-      <div style={{ maxWidth: 400, display: "flex", flexDirection: "column", gap: 8 }}>
-        <input placeholder="Nome" value={name} onChange={e => setName(e.target.value)} />
+        {/* NOVO PRODUTO */}
+        <h3>Novo Produto</h3>
 
-        <input type="number" placeholder="Preço" value={price} onChange={e => setPrice(e.target.value)} />
+        <div
+          style={{
+            maxWidth: 400,
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+          }}
+        >
+          <input placeholder="Nome" value={name} onChange={(e) => setName(e.target.value)} />
 
-        <input type="number" placeholder="Estoque" value={stock} onChange={e => setStock(e.target.value)} />
+          <input
+            type="number"
+            placeholder="Preço"
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+          />
 
-        <input placeholder="Imagem principal (ex: whey.jpeg)" value={imageUrl} onChange={e => setImageUrl(e.target.value)} />
+          {/* Checkbox oferta */}
+          <label>
+            <input
+              type="checkbox"
+              checked={onSale}
+              onChange={(e) => setOnSale(e.target.checked)}
+            />
+            Produto em oferta?
+          </label>
 
-        <textarea placeholder="Descrição" value={description} onChange={e => setDescription(e.target.value)} />
+          {onSale && (
+            <input
+              type="number"
+              placeholder="Preço promocional"
+              value={salePrice}
+              onChange={(e) => setSalePrice(e.target.value)}
+            />
+          )}
 
-        <input placeholder="Imagens extras separadas por vírgula"
-               value={extraImages}
-               onChange={e => setExtraImages(e.target.value)} />
+          <input
+            type="number"
+            placeholder="Estoque"
+            value={stock}
+            onChange={(e) => setStock(e.target.value)}
+          />
 
-        <select value={categoryId} onChange={e => setCategoryId(e.target.value)}>
-          <option value="">Selecione categoria</option>
-          {categories.map(c => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
+          <input
+            placeholder="Imagem principal (ex: whey.jpeg)"
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+          />
 
-        <button onClick={addProduct}>Adicionar Produto</button>
-      </div>
+          <textarea
+            placeholder="Descrição"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
 
-      <hr />
+          <input
+            placeholder="Imagens extras separadas por vírgula"
+            value={extraImages}
+            onChange={(e) => setExtraImages(e.target.value)}
+          />
 
-      {/* CATEGORIAS */}
-      <h3>Categorias</h3>
-      <div style={{ display: "flex", gap: 10 }}>
-        <input placeholder="Nova categoria"
-               value={newCategory}
-               onChange={e => setNewCategory(e.target.value)} />
+          <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+            <option value="">Selecione categoria</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
 
-        <button onClick={addCategory}>Adicionar</button>
-      </div>
-
-      <ul>
-        {categories.map(c => (
-          <li key={c.id}>
-            {c.name}
-            <button style={{ color: "red", marginLeft: 10 }}
-                    onClick={() => deleteCategory(c.id)}>Excluir</button>
-          </li>
-        ))}
-      </ul>
-
-      <hr />
-
-      {/* LISTA DE PRODUTOS */}
-      <h3>Produtos</h3>
-
-      {products.map(p => (
-        <div key={p.id} style={{ marginBottom: 10, padding: 10, borderBottom: "1px solid #ccc" }}>
-          <strong>{p.name}</strong> — R$ {p.price.toFixed(2)}
-          <br />
-          Categoria: {p.category?.name || "Sem categoria"}
-          <br />
-
-          <button onClick={() =>
-            setEditingProduct({
-              ...p,
-              images: (p.images || []).join(", ")
-            })
-          }>
-            Editar
-          </button>
-
-          <button style={{ color: "red", marginLeft: 10 }} onClick={() => deleteProduct(p.id)}>
-            Excluir
-          </button>
+          <button onClick={addProduct}>Adicionar Produto</button>
         </div>
-      ))}
 
-      {/* MODAL DE EDIÇÃO */}
+        <hr />
+
+        {/* CATEGORIAS */}
+        <h3>Categorias</h3>
+
+        <div style={{ display: "flex", gap: 10 }}>
+          <input
+            placeholder="Nova categoria"
+            value={newCategory}
+            onChange={(e) => setNewCategory(e.target.value)}
+          />
+          <button onClick={addCategory}>Adicionar</button>
+        </div>
+
+        <ul>
+          {categories.map((c) => (
+            <li key={c.id}>
+              {c.name}
+              <button
+                style={{ color: "red", marginLeft: 10 }}
+                onClick={() => deleteCategory(c.id)}
+              >
+                Excluir
+              </button>
+            </li>
+          ))}
+        </ul>
+
+        <hr />
+
+        {/* LISTA DE PRODUTOS */}
+        <h3>Produtos</h3>
+
+        {products.map((p) => (
+          <div
+            key={p.id}
+            className="themed-box"
+            style={{
+              marginBottom: 15,
+              padding: 12,
+              borderRadius: 10,
+            }}
+          >
+            <strong>{p.name}</strong> — R$ {p.price.toFixed(2)}
+            {p.onSale && (
+              <>
+                {" "}
+                —{" "}
+                <span style={{ color: "red", fontWeight: 700 }}>
+                  R$ {p.salePrice.toFixed(2)}
+                </span>{" "}
+                (oferta)
+              </>
+            )}
+            <br />
+
+            Categoria: {p.category?.name || "Sem categoria"}
+            <br />
+
+            <button
+              onClick={() =>
+                setEditingProduct({
+                  ...p,
+                  images: (p.images || []).join(", "),
+                })
+              }
+            >
+              Editar
+            </button>
+
+            <button
+              style={{ color: "red", marginLeft: 10 }}
+              onClick={() => deleteProduct(p.id)}
+            >
+              Excluir
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* MODAL EDIÇÃO */}
       {editingProduct && (
-        <div style={{
-          position: "fixed",
-          top: 0, left: 0,
-          width: "100vw", height: "100vh",
-          background: "rgba(0,0,0,0.6)",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center"
-        }}>
-          <div style={{ background: "#fff", padding: 20, width: 400 }}>
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            background: "rgba(0,0,0,0.6)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 9999,
+          }}
+        >
+          <div className="themed-box" style={{ width: 420 }}>
             <h3>Editar Produto</h3>
 
-            <input value={editingProduct.name}
-                   onChange={e => setEditingProduct({ ...editingProduct, name: e.target.value })} />
+            <input
+              value={editingProduct.name}
+              onChange={(e) =>
+                setEditingProduct({ ...editingProduct, name: e.target.value })
+              }
+            />
 
-            <input type="number" value={editingProduct.price}
-                   onChange={e => setEditingProduct({ ...editingProduct, price: e.target.value })} />
+            <input
+              type="number"
+              value={editingProduct.price}
+              onChange={(e) =>
+                setEditingProduct({ ...editingProduct, price: e.target.value })
+              }
+            />
 
-            <input type="number" value={editingProduct.stock}
-                   onChange={e => setEditingProduct({ ...editingProduct, stock: e.target.value })} />
+            <label>
+              <input
+                type="checkbox"
+                checked={editingProduct.onSale}
+                onChange={(e) =>
+                  setEditingProduct({
+                    ...editingProduct,
+                    onSale: e.target.checked,
+                  })
+                }
+              />
+              Produto em oferta?
+            </label>
 
-            <input value={editingProduct.imageUrl}
-                   onChange={e => setEditingProduct({ ...editingProduct, imageUrl: e.target.value })} />
+            {editingProduct.onSale && (
+              <input
+                type="number"
+                placeholder="Preço promocional"
+                value={editingProduct.salePrice || ""}
+                onChange={(e) =>
+                  setEditingProduct({
+                    ...editingProduct,
+                    salePrice: e.target.value,
+                  })
+                }
+              />
+            )}
 
-            <textarea value={editingProduct.description}
-                      onChange={e => setEditingProduct({ ...editingProduct, description: e.target.value })} />
+            <input
+              type="number"
+              value={editingProduct.stock}
+              onChange={(e) =>
+                setEditingProduct({ ...editingProduct, stock: e.target.value })
+              }
+            />
 
-            <input placeholder="Imagens extras separadas por vírgula"
-                   value={editingProduct.images}
-                   onChange={e => setEditingProduct({ ...editingProduct, images: e.target.value })} />
+            <input
+              value={editingProduct.imageUrl}
+              onChange={(e) =>
+                setEditingProduct({
+                  ...editingProduct,
+                  imageUrl: e.target.value,
+                })
+              }
+            />
+
+            <textarea
+              value={editingProduct.description}
+              onChange={(e) =>
+                setEditingProduct({
+                  ...editingProduct,
+                  description: e.target.value,
+                })
+              }
+            />
+
+            <input
+              placeholder="Imagens extras separadas por vírgula"
+              value={editingProduct.images}
+              onChange={(e) =>
+                setEditingProduct({ ...editingProduct, images: e.target.value })
+              }
+            />
 
             <select
               value={editingProduct.category?.id || ""}
-              onChange={e => setEditingProduct({
-                ...editingProduct,
-                category: e.target.value ? { id: e.target.value } : null
-              })}>
+              onChange={(e) =>
+                setEditingProduct({
+                  ...editingProduct,
+                  category: e.target.value ? { id: e.target.value } : null,
+                })
+              }
+            >
               <option value="">Sem categoria</option>
-              {categories.map(c => (
-                <option key={c.id} value={c.id}>{c.name}</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
               ))}
             </select>
 
-            <br /><br />
+            <br />
+            <br />
 
             <button onClick={saveEdit}>Salvar</button>
-            <button style={{ marginLeft: 10 }} onClick={() => setEditingProduct(null)}>Cancelar</button>
+            <button
+              style={{ marginLeft: 10 }}
+              onClick={() => setEditingProduct(null)}
+            >
+              Cancelar
+            </button>
           </div>
         </div>
       )}

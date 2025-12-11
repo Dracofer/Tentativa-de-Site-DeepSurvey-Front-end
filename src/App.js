@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+
 import Home from "./pages/Home";
 import ProductDetails from "./pages/ProductDetails";
 import Cart from "./pages/Cart";
@@ -16,8 +17,10 @@ import SearchResults from "./pages/SearchResults";
 import Offers from "./pages/Offers";
 import Produtos from "./pages/Produtos";
 import AdminStore from "./pages/AdminStore";
+import AdminFretes from "./pages/AdminFretes";
 
 import useAuth from "./hooks/useAuth";
+import { useStoreConfig } from "./context/StoreConfigContext";
 
 function AdminRoute({ children }) {
   const auth = useAuth();
@@ -29,13 +32,45 @@ function AdminRoute({ children }) {
 }
 
 export default function App() {
+  const { cfg } = useStoreConfig();
+
+  useEffect(() => {
+    if (!cfg) return;
+
+    // tema geral
+    document.body.classList.remove("theme-light", "theme-dark", "theme-glass");
+    document.body.classList.add(`theme-${cfg.themeMode}`);
+
+    // tema topo
+    document.body.classList.remove(
+      "header-light",
+      "header-dark",
+      "header-blue",
+      "header-glass"
+    );
+
+    if (cfg.headerTheme) {
+      document.body.classList.add(`header-${cfg.headerTheme}`);
+    }
+
+    // fundo
+    document.documentElement.style.setProperty(
+      "--bg-image",
+      cfg.backgroundImage ? `url("${cfg.backgroundImage}")` : "none"
+    );
+
+    // NOVAS CORES
+    document.documentElement.style.setProperty("--title-color", cfg.titleColor || "#ffffff");
+    document.documentElement.style.setProperty("--product-text-color", cfg.productTextColor || "#dddddd");
+    document.documentElement.style.setProperty("--page-text-color", cfg.pageTextColor || "#cccccc");
+
+  }, [cfg]);
+
   return (
     <div className="app-root">
       <Navbar />
-
-      <main className="container">
+      <main className="container" style={{ background: "transparent" }}>
         <Routes>
-          {/* Rotas públicas */}
           <Route path="/" element={<Home />} />
           <Route path="/produto/:id" element={<ProductDetails />} />
           <Route path="/cart" element={<Cart />} />
@@ -48,24 +83,9 @@ export default function App() {
           <Route path="/buscar" element={<SearchResults />} />
           <Route path="/produtos" element={<Produtos />} />
 
-          {/* ROTAS PROTEGIDAS */}
-          <Route
-            path="/painel"
-            element={
-              <AdminRoute>
-                <Admin />
-              </AdminRoute>
-            }
-          />
-
-          <Route
-            path="/painel-loja"
-            element={
-              <AdminRoute>
-                <AdminStore />
-              </AdminRoute>
-            }
-          />
+          <Route path="/painel" element={<AdminRoute><Admin /></AdminRoute>} />
+          <Route path="/painel-loja" element={<AdminRoute><AdminStore /></AdminRoute>} />
+          <Route path="/painel-fretes" element={<AdminRoute><AdminFretes /></AdminRoute>} />
         </Routes>
       </main>
 
